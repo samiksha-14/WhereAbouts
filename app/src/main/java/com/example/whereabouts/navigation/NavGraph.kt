@@ -11,6 +11,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
@@ -23,6 +24,7 @@ import com.example.whereabouts.ui.screens.HomeScreen
 import com.example.whereabouts.ui.screens.PermissionRationaleScreen
 import com.example.whereabouts.ui.screens.SettingsScreen
 import com.example.whereabouts.ui.screens.SignInScreen
+import com.google.firebase.auth.FirebaseAuth
 
 private data class BottomNavItem(
     val screen: Screen,
@@ -39,7 +41,15 @@ private val bottomNavItems = listOf(
 private val bottomNavRoutes = bottomNavItems.map { it.screen.route }.toSet()
 
 @Composable
-fun WhereAboutsNavGraph(startDestination: String = Screen.SignIn.route) {
+fun WhereAboutsNavGraph() {
+    // Returning users skip Sign In and go straight to permission check
+    val startDestination = remember {
+        if (FirebaseAuth.getInstance().currentUser != null) {
+            Screen.PermissionRationale.route
+        } else {
+            Screen.SignIn.route
+        }
+    }
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
@@ -97,7 +107,13 @@ fun WhereAboutsNavGraph(startDestination: String = Screen.SignIn.route) {
                 )
             }
             composable(Screen.BlockingWall.route) {
-                BlockingWallScreen()
+                BlockingWallScreen(
+                    onPermissionGranted = {
+                        navController.navigate(Screen.Home.route) {
+                            popUpTo(Screen.BlockingWall.route) { inclusive = true }
+                        }
+                    }
+                )
             }
             composable(Screen.Home.route) {
                 HomeScreen(innerPadding = innerPadding)
