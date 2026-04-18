@@ -5,8 +5,8 @@ plugins {
     alias(libs.plugins.ksp)
     alias(libs.plugins.hilt.android)
     // google-services applied in Phase 2 after google-services.json is added
+    id("com.google.gms.google-services")
 }
-
 android {
     namespace = "com.example.whereabouts"
     compileSdk = 35
@@ -22,6 +22,9 @@ android {
     }
 
     buildTypes {
+        debug {
+            isDebuggable = true
+        }
         release {
             isMinifyEnabled = false
             proguardFiles(
