@@ -33,6 +33,11 @@
             </intent-filter>
         </activity>
 
+        <service
+            android:name=".service.LocationForegroundService"
+            android:foregroundServiceType="location"
+            android:exported="false" />
+
     </application>
 
 </manifest>
