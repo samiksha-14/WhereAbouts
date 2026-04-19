@@ -27,9 +27,9 @@
             C69,67 76,58 76,47
             C76,35 66,25 54,25 Z" />
 
-    <!-- Purple inner circle (background colour — creates hollow pin effect) -->
+    <!-- Blue inner circle (background colour — creates hollow pin effect) -->
     <path
-        android:fillColor="#5C35D4"
+        android:fillColor="#4A7FCC"
         android:pathData="M54,47 m-11,0 a11,11 0 1,0 22,0 a11,11 0 1,0 -22,0" />
 
     <!-- Left white dot (person 1) -->
