@@ -22,6 +22,11 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.WhereAbouts">
 
+        <!-- Maps SDK API key — value injected from local.properties via build.gradle -->
+        <meta-data
+            android:name="com.google.android.geo.API_KEY"
+            android:value="${MAPS_API_KEY}" />
+
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -37,6 +42,24 @@
             android:name=".service.LocationForegroundService"
             android:foregroundServiceType="location"
             android:exported="false" />
+
+        <!-- Restart location service after device reboot -->
+        <receiver
+            android:name=".receiver.BootReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
+
+        <!-- FCM: receives token-refresh events and data messages -->
+        <service
+            android:name=".service.FcmService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+            </intent-filter>
+        </service>
 
     </application>
 

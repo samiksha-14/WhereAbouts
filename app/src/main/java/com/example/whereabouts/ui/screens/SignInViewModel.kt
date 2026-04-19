@@ -6,6 +6,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.SetOptions
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -37,20 +38,18 @@ class SignInViewModel @Inject constructor(
                 val result = auth.signInWithCredential(credential).await()
                 val user = result.user ?: throw Exception("Authentication failed")
 
-                // Create Firestore profile only on first login
-                if (result.additionalUserInfo?.isNewUser == true) {
-                    val profile = mapOf(
-                        "name"      to (user.displayName ?: ""),
-                        "email"     to (user.email ?: ""),
-                        "photoUrl"  to (user.photoUrl?.toString() ?: ""),
-                        "fcmToken"  to "",
-                        "createdAt" to FieldValue.serverTimestamp()
-                    )
-                    firestore.collection("users")
-                        .document(user.uid)
-                        .set(profile)
-                        .await()
-                }
+                // Upsert Firestore profile on every sign-in (merge so existing
+                // fields like fcmToken are not overwritten on returning users).
+                val profile = mapOf(
+                    "name"      to (user.displayName ?: ""),
+                    "email"     to (user.email?.lowercase() ?: ""),
+                    "photoUrl"  to (user.photoUrl?.toString() ?: ""),
+                    "createdAt" to FieldValue.serverTimestamp()
+                )
+                firestore.collection("users")
+                    .document(user.uid)
+                    .set(profile, SetOptions.merge())
+                    .await()
 
                 _state.value = SignInState.Success
             } catch (e: Exception) {

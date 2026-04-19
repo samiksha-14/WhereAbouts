@@ -65,6 +65,7 @@ class LocationRepository @Inject constructor(
 
         val battery = currentBatteryPercent()
         if (isOnline()) {
+            flushPendingQueue()          // drain any queued entries first
             writeToRtdb(location, battery)
         } else {
             queueLocally(location, battery, now)
@@ -85,6 +86,35 @@ class LocationRepository @Inject constructor(
             "isLive" to false
         )
         runCatching { node.updateChildren(update).await() }
+    }
+
+    /**
+     * Replays any location rows queued in Room while offline, writing each
+     * to RTDB in chronological order, then deletes them on success.
+     * No-op if offline or queue is empty.
+     */
+    suspend fun flushPendingQueue() {
+        if (!isOnline()) return
+        val uid     = auth.currentUser?.uid ?: return
+        val pending = pendingLocationDao.getUnsynced()
+        if (pending.isEmpty()) return
+
+        pending.forEach { entity ->
+            runCatching {
+                val payload = mapOf(
+                    "lat"        to entity.lat,
+                    "lng"        to entity.lng,
+                    "accuracy"   to entity.accuracy,
+                    "battery"    to entity.battery,
+                    "timestamp"  to entity.timestamp,
+                    "sessionEnd" to null,
+                    "isLive"     to true
+                )
+                database.getReference("locations").child(uid).setValue(payload).await()
+                pendingLocationDao.markSynced(entity.id)
+            }
+        }
+        pendingLocationDao.deleteSynced()
     }
 
     // --- internals ---

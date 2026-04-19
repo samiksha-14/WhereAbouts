@@ -7,6 +7,14 @@ plugins {
     // google-services applied in Phase 2 after google-services.json is added
     id("com.google.gms.google-services")
 }
+// Read Maps API key from local.properties (never commit that file)
+val mapsApiKey = rootProject.file("local.properties")
+    .takeIf { it.exists() }
+    ?.readLines()
+    ?.firstOrNull { it.startsWith("MAPS_API_KEY=") }
+    ?.removePrefix("MAPS_API_KEY=")
+    ?: ""
+
 android {
     namespace = "com.example.whereabouts"
     compileSdk = 35
@@ -19,6 +27,9 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        // Injected into AndroidManifest as ${MAPS_API_KEY}
+        manifestPlaceholders["MAPS_API_KEY"] = mapsApiKey
     }
 
     buildTypes {

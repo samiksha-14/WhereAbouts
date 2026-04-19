@@ -122,7 +122,14 @@ fun WhereAboutsNavGraph() {
                 CircleScreen(innerPadding = innerPadding)
             }
             composable(Screen.Settings.route) {
-                SettingsScreen(innerPadding = innerPadding)
+                SettingsScreen(
+                    innerPadding = innerPadding,
+                    onSignOut    = {
+                        navController.navigate(Screen.SignIn.route) {
+                            popUpTo(0) { inclusive = true }
+                        }
+                    }
+                )
             }
         }
     }
